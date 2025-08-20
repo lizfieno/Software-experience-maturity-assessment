@@ -1,0 +1,267 @@
+import React, { useState } from 'react';
+import { ChevronRight, CheckCircle, XCircle, BarChart3, TrendingUp, Users, Shield } from 'lucide-react';
+
+const SXMAssessment = () => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [showResults, setShowResults] = useState(false);
+
+  const questions = [
+    "Do you know which apps and features your employees and customers regularly use?",
+    "Do you know how employees and customers are using your software?",
+    "Do you know if the software you've invested in is meeting your user needs, or if they're using additional tools?",
+    "Can you spot and resolve in-app friction before users submit support tickets?",
+    "Do you onboard and guide employees and customers through software, in-app?",
+    "Can you measure the ROI of your software investments?",
+    "Do you capture feedback and understand how users feel about your software?",
+    "Can you tie your software roadmap to real business outcomes, like increasing revenue?"
+  ];
+
+  const handleAnswer = (answer) => {
+    const newAnswers = { ...answers, [currentQuestion]: answer };
+    setAnswers(newAnswers);
+
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setShowResults(true);
+    }
+  };
+
+  const getScore = () => {
+    return Object.values(answers).filter(answer => answer === 'no').length;
+  };
+
+  const getOpportunityAreas = () => {
+    const areas = [];
+    Object.entries(answers).forEach(([index, answer]) => {
+      if (answer === 'no') {
+        areas.push({
+          question: questions[parseInt(index)],
+          index: parseInt(index)
+        });
+      }
+    });
+    return areas;
+  };
+
+  const getRecommendations = () => {
+    const score = getScore();
+    if (score >= 6) {
+      return {
+        urgency: "Critical",
+        message: "Your software experience gaps are significantly impacting business outcomes. An SXM platform is essential for competitive advantage.",
+        icon: <Shield className="w-6 h-6" />
+      };
+    } else if (score >= 4) {
+      return {
+        urgency: "High Priority",
+        message: "Multiple capability gaps are limiting your digital transformation ROI. SXM implementation should be prioritized.",
+        icon: <TrendingUp className="w-6 h-6" />
+      };
+    } else if (score >= 2) {
+      return {
+        urgency: "Moderate",
+        message: "Some key visibility gaps exist. An SXM platform would optimize your current investments.",
+        icon: <BarChart3 className="w-6 h-6" />
+      };
+    } else {
+      return {
+        urgency: "Opportunity",
+        message: "You have strong foundations. SXM can help you achieve even greater efficiency and insights.",
+        icon: <Users className="w-6 h-6" />
+      };
+    }
+  };
+
+  const resetAssessment = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowResults(false);
+  };
+
+  if (showResults) {
+    const score = getScore();
+    const opportunityAreas = getOpportunityAreas();
+    const recommendation = getRecommendations();
+
+    return (
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-4">Your Software Experience Maturity Results</h1>
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gray-900 rounded-lg">
+              <div className="flex items-center gap-2" style={{color: '#FF4876'}}>
+                {recommendation.icon}
+                <span className="text-lg font-semibold">{recommendation.urgency} Priority</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Score Summary */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <div className="bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-4">Assessment Summary</h2>
+              <div className="text-center">
+                <div className="text-6xl font-bold mb-2" style={{color: '#FF4876'}}>
+                  {score}/8
+                </div>
+                <p className="text-gray-300">Capability Gaps Identified</p>
+              </div>
+              <p className="mt-6 text-gray-300 leading-relaxed">
+                {recommendation.message}
+              </p>
+            </div>
+
+            <div className="bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-6">Business Impact</h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Revenue optimization opportunities</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Risk reduction potential</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Cost efficiency improvements</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Enhanced user experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Opportunity Areas */}
+          {opportunityAreas.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">Key Opportunity Areas</h2>
+              <div className="grid gap-4">
+                {opportunityAreas.map((area, index) => (
+                  <div key={index} className="bg-gray-900 rounded-lg p-6 border-l-4" style={{borderColor: '#FF4876'}}>
+                    <div className="flex items-start gap-4">
+                      <XCircle className="w-6 h-6 mt-1" style={{color: '#FF4876'}} />
+                      <div>
+                        <h3 className="font-semibold mb-2">Gap #{area.index + 1}</h3>
+                        <p className="text-gray-300">{area.question}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Call to Action */}
+          <div className="text-center bg-gray-900 rounded-xl p-8">
+            <h2 className="text-3xl font-bold mb-4">Ready to Build Your Business Case?</h2>
+            <p className="text-xl text-gray-300 mb-8">
+              Transform these insights into a compelling ROI story for SXM platform investment.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105"
+                style={{backgroundColor: '#FF4876', color: 'black'}}
+              >
+                Build Business Case
+              </button>
+              <button 
+                onClick={resetAssessment}
+                className="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition-all"
+              >
+                Retake Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">Software Experience Maturity Assessment</h1>
+          <p className="text-xl text-gray-300">Understand how well your software stack is working for you</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-12">
+          <div className="flex justify-between text-sm text-gray-400 mb-2">
+            <span>Question {currentQuestion + 1} of {questions.length}</span>
+            <span>{Math.round(((currentQuestion + 1) / questions.length) * 100)}%</span>
+          </div>
+          <div className="w-full bg-gray-800 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full transition-all duration-300"
+              style={{
+                backgroundColor: '#FF4876',
+                width: `${((currentQuestion + 1) / questions.length) * 100}%`
+              }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-gray-900 rounded-xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-8 leading-relaxed">
+            {questions[currentQuestion]}
+          </h2>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => handleAnswer('yes')}
+              className="flex-1 group relative overflow-hidden bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-all duration-300 border-2 border-transparent hover:border-green-500"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span className="text-xl font-semibold">Yes</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleAnswer('no')}
+              className="flex-1 group relative overflow-hidden bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-all duration-300 border-2 border-transparent hover:border-pink-500"
+              style={{'--tw-border-opacity': 1, borderColor: 'rgba(255, 72, 118, var(--tw-border-opacity))'}}
+            >
+              <div className="flex items-center justify-center gap-3">
+                <XCircle className="w-6 h-6" style={{color: '#FF4876'}} />
+                <span className="text-xl font-semibold">No</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Previous Answers Preview */}
+        {Object.keys(answers).length > 0 && (
+          <div className="bg-gray-900 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Progress So Far</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(answers).map(([index, answer]) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800"
+                >
+                  <span className="text-sm">Q{parseInt(index) + 1}</span>
+                  {answer === 'yes' ? 
+                    <CheckCircle className="w-4 h-4 text-green-500" /> : 
+                    <XCircle className="w-4 h-4" style={{color: '#FF4876'}} />
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SXMAssessment;
