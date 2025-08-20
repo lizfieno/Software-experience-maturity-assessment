@@ -1,0 +1,368 @@
+import React, { useState } from 'react';
+import { ChevronRight, CheckCircle, XCircle, BarChart3, TrendingUp, Users, Shield, Mail, Share2 } from 'lucide-react';
+
+const SXMAssessment = () => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [showResults, setShowResults] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState('');
+
+  const questions = [
+    "Do you know which apps and features your employees and customers regularly use?",
+    "Do you know how employees and customers are using your software?",
+    "Do you know if the software you've invested in is meeting your user needs, or if they're using additional tools?",
+    "Can you spot and resolve in-app friction before users submit support tickets?",
+    "Do you onboard and guide employees and customers through software, in-app?",
+    "Can you measure the ROI of your software investments?",
+    "Do you capture feedback and understand how users feel about your software?",
+    "Can you tie your software roadmap to real business outcomes, like increasing revenue?"
+  ];
+
+  const handleAnswer = (answer) => {
+    const newAnswers = { ...answers, [currentQuestion]: answer };
+    setAnswers(newAnswers);
+
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const showResultsPage = () => {
+    setShowResults(true);
+  };
+
+  const getScore = () => {
+    return Object.values(answers).filter(answer => answer === 'no').length;
+  };
+
+  const getMaturityLevel = () => {
+    const score = getScore();
+    if (score >= 6) {
+      return {
+        level: "Beginning",
+        color: "#FF4876", // Pink for low maturity
+        urgency: "Critical",
+        message: "Your software experience gaps are significantly impacting business outcomes. An SXM platform is essential for competitive advantage.",
+        icon: <Shield className="w-6 h-6" />
+      };
+    } else if (score >= 4) {
+      return {
+        level: "Developing",
+        color: "#FFA500", // Orange for medium-low maturity
+        urgency: "High priority",
+        message: "Multiple capability gaps are limiting your digital transformation ROI. SXM implementation should be prioritized.",
+        icon: <TrendingUp className="w-6 h-6" />
+      };
+    } else if (score >= 2) {
+      return {
+        level: "Maturing",
+        color: "#FFD700", // Yellow for medium maturity
+        urgency: "Moderate",
+        message: "Some key visibility gaps exist. An SXM platform would optimize your current investments.",
+        icon: <BarChart3 className="w-6 h-6" />
+      };
+    } else {
+      return {
+        level: "Advanced",
+        color: "#00FF00", // Green for high maturity
+        urgency: "Opportunity",
+        message: "You have strong foundations. SXM can help you achieve even greater efficiency and insights.",
+        icon: <Users className="w-6 h-6" />
+      };
+    }
+  };
+
+  const getOpportunityAreas = () => {
+    const areas = [];
+    Object.entries(answers).forEach(([index, answer]) => {
+      if (answer === 'no') {
+        areas.push({
+          question: questions[parseInt(index)],
+          index: parseInt(index)
+        });
+      }
+    });
+    return areas;
+  };
+
+  const resetAssessment = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowResults(false);
+    setShowEmailForm(false);
+    setEmail('');
+  };
+
+  const handleEmailResults = () => {
+    // Here you would integrate with your email service
+    alert(`Results will be sent to ${email}`);
+    setShowEmailForm(false);
+  };
+
+  const shareToLinkedIn = () => {
+    const text = "I just completed a software experience maturity assessment. How mature is your software stack?";
+    const url = window.location.href;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const shareToTwitter = () => {
+    const text = "I just completed a software experience maturity assessment. How mature is your software stack?";
+    const url = window.location.href;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  };
+
+  const isAssessmentComplete = Object.keys(answers).length === questions.length;
+
+  if (showResults) {
+    const score = getScore();
+    const opportunityAreas = getOpportunityAreas();
+    const maturity = getMaturityLevel();
+
+    return (
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-4">Your software experience maturity results</h1>
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gray-900 rounded-lg">
+              <div className="flex items-center gap-2" style={{color: maturity.color}}>
+                {maturity.icon}
+                <span className="text-lg font-semibold">{maturity.level} maturity</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Score Summary */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <div className="bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-4">Assessment summary</h2>
+              <div className="text-center">
+                <div className="text-6xl font-bold mb-2" style={{color: maturity.color}}>
+                  {score}/8
+                </div>
+                <p className="text-gray-300">Capability gaps identified</p>
+              </div>
+              <p className="mt-6 text-gray-300 leading-relaxed">
+                {maturity.message}
+              </p>
+            </div>
+
+            <div className="bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-6">Business impact</h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Revenue optimization opportunities</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Risk reduction potential</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Cost efficiency improvements</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5" style={{color: '#FF4876'}} />
+                  <span>Enhanced user experience</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Opportunity Areas */}
+          {opportunityAreas.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">Key opportunity areas</h2>
+              <div className="grid gap-4">
+                {opportunityAreas.map((area, index) => (
+                  <div key={index} className="bg-gray-900 rounded-lg p-6 border-l-4" style={{borderColor: '#FF4876'}}>
+                    <div className="flex items-start gap-4">
+                      <XCircle className="w-6 h-6 mt-1" style={{color: '#FF4876'}} />
+                      <div>
+                        <h3 className="font-semibold mb-2">Gap #{area.index + 1}</h3>
+                        <p className="text-gray-300">{area.question}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Email Results Form */}
+          {showEmailForm && (
+            <div className="mb-12 bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-6">Get your results via email</h2>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
+                />
+                <button
+                  onClick={handleEmailResults}
+                  disabled={!email}
+                  className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{backgroundColor: '#FF4876', color: 'black'}}
+                >
+                  Send results
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Share Buttons */}
+          <div className="mb-12 text-center">
+            <h2 className="text-2xl font-bold mb-6">Share your results</h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={shareToLinkedIn}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                LinkedIn
+              </button>
+              <button
+                onClick={shareToTwitter}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-400 hover:bg-blue-500 rounded-lg font-semibold transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                Twitter
+              </button>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center bg-gray-900 rounded-xl p-8">
+            <h2 className="text-3xl font-bold mb-4">Ready to build your business case?</h2>
+            <p className="text-xl text-gray-300 mb-8">
+              Transform these insights into a compelling ROI story for SXM platform investment.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105"
+                style={{backgroundColor: '#FF4876', color: 'black'}}
+              >
+                Build business case
+              </button>
+              {!showEmailForm && (
+                <button 
+                  onClick={() => setShowEmailForm(true)}
+                  className="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition-all flex items-center gap-2 justify-center"
+                >
+                  <Mail className="w-5 h-5" />
+                  Email me my results
+                </button>
+              )}
+              <button 
+                onClick={resetAssessment}
+                className="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition-all"
+              >
+                Retake assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">Software experience maturity assessment</h1>
+          <p className="text-xl text-gray-300">Understand how well your software stack is working for you</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-12">
+          <div className="flex justify-between text-sm text-gray-400 mb-2">
+            <span>Question {currentQuestion + 1} of {questions.length}</span>
+            <span>{Math.round(((currentQuestion + 1) / questions.length) * 100)}%</span>
+          </div>
+          <div className="w-full bg-gray-800 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full transition-all duration-300"
+              style={{
+                backgroundColor: '#FF4876',
+                width: `${((currentQuestion + 1) / questions.length) * 100}%`
+              }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-gray-900 rounded-xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-8 leading-relaxed">
+            {questions[currentQuestion]}
+          </h2>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => handleAnswer('yes')}
+              className="flex-1 group relative overflow-hidden bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-all duration-300 border-2 border-transparent hover:border-green-500"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span className="text-xl font-semibold">Yes</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleAnswer('no')}
+              className="flex-1 group relative overflow-hidden bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-all duration-300 border-2 border-transparent hover:border-pink-500"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <XCircle className="w-6 h-6" style={{color: '#FF4876'}} />
+                <span className="text-xl font-semibold">No</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Get Results Button */}
+        {isAssessmentComplete && (
+          <div className="text-center mb-8">
+            <button
+              onClick={showResultsPage}
+              className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 flex items-center gap-3 mx-auto"
+              style={{backgroundColor: '#FF4876', color: 'black'}}
+            >
+              Get my results
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Previous Answers Preview */}
+        {Object.keys(answers).length > 0 && (
+          <div className="bg-gray-900 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Progress so far</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(answers).map(([index, answer]) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800"
+                >
+                  <span className="text-sm">Q{parseInt(index) + 1}</span>
+                  {answer === 'yes' ? 
+                    <CheckCircle className="w-4 h-4 text-green-500" /> : 
+                    <XCircle className="w-4 h-4" style={{color: '#FF4876'}} />
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SXMAssessment;
