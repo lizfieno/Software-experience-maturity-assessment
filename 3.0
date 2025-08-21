@@ -1,0 +1,531 @@
+const resetAssessment = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowResults(false);
+    setShowEmailForm(false);
+    setEmail('');
+  };
+
+  const downloadResults = () => {
+    const maturity = getMaturityLevel();
+    const recommendations = getRecommendedActions();
+    
+    // Create a simple text version of the results
+    let resultsText = `SOFTWARE EXPERIENCE MATURITY ASSESSMENT RESULTS\n\n`;
+    resultsText += `Maturity Level: ${maturity.level}\n`;
+    resultsText += `Capability Gaps: ${getScore()}/9\n\n`;
+    resultsText += `Assessment: ${maturity.message}\n\n`;
+    
+    resultsText += `MATURITY ACCELERATORS:\n\n`;
+    maturity.accelerators?.forEach((accelerator, index) => {
+      resultsText += `${index + 1}. ${accelerator}\n`;
+    });
+    resultsText += `\n`;
+    
+    resultsText += `WHERE TO FOCUS IN VENDOR EVALUATION:\n\n`;
+    recommendations.forEach((rec, index) => {
+      resultsText += `${index + 1}. ${rec.category}\n`;
+      resultsText += `Description: ${rec.description}\n`;
+      resultsText += `Priority: ${rec.priority}\n`;
+      resultsText += `Key capabilities: ${rec.tools.join(', ')}\n`;
+      if (rec.businessCase1) resultsText += `Business case 1: ${rec.businessCase1}\n`;
+      if (rec.businessCase2) resultsText += `Business case 2: ${rec.businessCase2}\n`;
+      resultsText += `\n`;
+    });
+    
+    // Create and download the file
+    const blob = new Blob([resultsText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sxm-assessment-results.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };import React, { useState } from 'react';
+import { ChevronRight, CheckCircle, XCircle, BarChart3, TrendingUp, Users, Shield, Mail, Share2 } from 'lucide-react';
+
+const SXMAssessment = () => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [showResults, setShowResults] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState('');
+
+  const questions = [
+    "Do you know which apps and features are used, and how?",
+    "Do you understand cross-application user journeys?",
+    "Can you spot and fix bad software experiences before they lead to churn or support tickets?",
+    "Do you use your software experience data to inform predictive analytics?",
+    "Do you use in-app guides and emails to onboard new users?",
+    "Are you using AI to analyze and surface software experience insights?",
+    "Can you confidently measure the ROI of your software investments?",
+    "Do you collect, consolidate, and analyze user feedback in-app?",
+    "Can you tie your software roadmap to real business outcomes, like increasing revenue?"
+  ];
+
+  const handleAnswer = (answer) => {
+    const newAnswers = { ...answers, [currentQuestion]: answer };
+    setAnswers(newAnswers);
+
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+    // Don't automatically show results - let user click the button
+  };
+
+  const showResultsPage = () => {
+    setShowResults(true);
+  };
+
+  const getScore = () => {
+    return Object.values(answers).filter(answer => answer === 'no').length;
+  };
+
+  const getMaturityLevel = () => {
+    const score = getScore();
+    console.log("Score calculated:", score); // Debug
+    
+    if (score >= 7) {
+      const result = {
+        level: "Reactive",
+        color: "#FF4876",
+        urgency: "Critical",
+        message: "You're in firefighting mode. Feedback lives in silos, analytics are patchy or mistrusted, and most improvements rely on manual training or one-off fixes. Focus on documenting problems and capturing usable data.",
+        icon: <Shield className="w-6 h-6" />,
+        accelerators: [
+          "Establish measurement as a priority, select pilot teams, and define initial success metrics.",
+          "Set up basic governance, consolidate data sources, deploy simple feedback tools, and train internal champions to build trust in data-driven decision-making."
+        ]
+      };
+      console.log("Returning Reactive level with accelerators:", result.accelerators); // Debug
+      return result;
+    } else if (score >= 5) {
+      const result = {
+        level: "Proving",
+        color: "#FFA500",
+        urgency: "High priority",
+        message: "You've implemented some basic measurement and guidance tools. Early pilots show promise, but wins are small, inconsistent, and limited to a few teams. Focus on consolidating feedback sources and showing measurable impact.",
+        icon: <TrendingUp className="w-6 h-6" />,
+        accelerators: [
+          "Document measurable ROI, expand successful initiatives, and standardize measurement in product development.",
+          "Roll out self-service analytics, integrate core business systems, enable advanced analytics, and establish a formal, cross-functional measurement team."
+        ]
+      };
+      console.log("Returning Proving level with accelerators:", result.accelerators); // Debug
+      return result;
+    } else if (score >= 3) {
+      const result = {
+        level: "Scaling",
+        color: "#FFD700",
+        urgency: "Moderate",
+        message: "Pockets of success exist, but maturity is uneven. Different teams run their own programs, data definitions don't always match, and campaigns lack coordination. Focus on standardizing practices and expanding proven approaches.",
+        icon: <BarChart3 className="w-6 h-6" />,
+        accelerators: [
+          "Create enterprise-wide standards linking experience optimization to business goals, coordinate roadmaps, and fully integrate platforms across systems.",
+          "Deploy unified governance structures, establish a dedicated Center of Excellence, and build cross-functional accountability around shared OKRs."
+        ]
+      };
+      console.log("Returning Scaling level with accelerators:", result.accelerators); // Debug
+      return result;
+    } else if (score >= 1) {
+      const result = {
+        level: "Integrated",
+        color: "#90EE90",
+        urgency: "Opportunity",
+        message: "You've rolled out SXM company-wide, but not every improvement is proactive. Data and governance are in place, yet experience work is still mostly reactive rather than predictive. Focus on journey-centric optimization.",
+        icon: <Users className="w-6 h-6" />,
+        accelerators: [
+          "Leverage AI-powered, predictive experience insights to drive proactive customer success, real-time personalization, and continuous optimization at scale.",
+          "Embed experience data into strategy, innovation, and decision-making to establish market leadership, foster ecosystem partnerships, and build an experience-first organization."
+        ]
+      };
+      console.log("Returning Integrated level with accelerators:", result.accelerators); // Debug
+      return result;
+    } else {
+      const result = {
+        level: "Predictive",
+        color: "#00FF00",
+        urgency: "Strategic",
+        message: "You've transformed software experience management into a competitive advantage. Experience data drives strategic decisions with AI-powered insights and real-time personalization. Focus on sustaining leadership and continuous innovation.",
+        icon: <Users className="w-6 h-6" />,
+        accelerators: [
+          "Scale your SXM expertise across the broader ecosystem through strategic partnerships and industry thought leadership to maintain competitive advantage.",
+          "Continuously evolve your SXM platform capabilities with next-generation AI, autonomous optimization, and predictive market intelligence to stay ahead of emerging user expectations and competitive threats."
+        ]
+      };
+      console.log("Returning Predictive level with accelerators:", result.accelerators); // Debug
+      return result;
+    }
+  };
+
+  const getOpportunityAreas = () => {
+    const areas = [];
+    Object.entries(answers).forEach(([index, answer]) => {
+      if (answer === 'no') {
+        areas.push({
+          question: questions[parseInt(index)],
+          index: parseInt(index)
+        });
+      }
+    });
+    return areas;
+  };
+
+  const getRecommendedActions = () => {
+    const gapIndices = Object.entries(answers)
+      .filter(([index, answer]) => answer === 'no')
+      .map(([index]) => parseInt(index));
+
+    const recommendations = [];
+
+    // User Behavior Insights (Questions 0, 1, 3)
+    const needsAnalytics = gapIndices.some(index => [0, 1, 3].includes(index));
+    if (needsAnalytics) {
+      recommendations.push({
+        category: "User behavior insights",
+        description: "Implement comprehensive user analytics",
+        tools: ["Behavioral analytics", "Session replay tools", "AI-powered insights and recommendations", "User journey mapping", "AI Agent analytics"],
+        priority: "High",
+        businessCase1: "Cut costs: With visibility into how employees and customers actually use your software, you can identify optimization opportunities and reduce friction.",
+        businessCase2: "Increase revenue: Understand what features users love so you know what to invest in, and how to create even happier users."
+      });
+    }
+
+    // Product Discovery & VOC (Questions 2, 5, 7) - Note: Questions are 0-indexed, so this is questions 3, 6, 8
+    const needsDiscovery = gapIndices.some(index => [2, 5, 7].includes(index));
+    if (needsDiscovery) {
+      recommendations.push({
+        category: "Product discovery & VOC",
+        description: "Establish scalable, AI-powered product discovery and VOC systems",
+        tools: ["In-app feedback and NPS capture", "AI-powered feedback analysis and triaging", "Qualitative insights linked to quantitative data and user communications", "User Idea Portals", "Roadmapping tied to feedback items"],
+        priority: "High",
+        businessCase1: "Reduce risk: Connect user sentiment to business outcomes and measure the real impact of your software investments.",
+        businessCase2: "Cut costs: Improve roadmapping decisions by investing in what users care about, and skipping what they won't touch."
+      });
+    }
+
+    // In-app Guidance & Communications (Question 4) - Note: 0-indexed, so this is question 5
+    const needsOnboarding = gapIndices.includes(4);
+    if (needsOnboarding) {
+      recommendations.push({
+        category: "In-app guidance & communications",
+        description: "Deploy in-app user guidance and onboarding systems",
+        tools: ["In-app guidance and email journeys", "AI-powered guide and content creation", "Interactive onboarding and walkthroughs", "Tied to qualitative and quantitative data"],
+        priority: "Medium",
+        businessCase1: "Cut costs: Reduce support tickets and accelerate user adoption with proactive, in-context guidance.",
+        businessCase2: "Increase revenue: Improve product adoption and drive cross-selling with tailored, personalized product communications."
+      });
+    }
+
+    // If no specific gaps, provide general SXM guidance
+    if (recommendations.length === 0) {
+      recommendations.push({
+        category: "Software experience optimization",
+        description: "Improve your already strong foundation with AI, Agentic, and advanced SXM capabilities",
+        tools: ["Unified data and user communications", "AI-powered insights", "AI Agents and agentic systems", "Cross-platform integrations"],
+        priority: "Strategic",
+        businessCase1: "Cut costs: Consolidate your software experience management solutions with unified, predictive insights across your entire tech stack.",
+        businessCase2: "Reduce risk: Get visibility into employee- and customer-facing software experiences to pinpoint vulnerabilities and understand AI agent behavior."
+      });
+    }
+
+    return recommendations.slice(0, 2); // Return top 2 recommendations
+  };
+
+  const resetAssessment = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowResults(false);
+    setShowEmailForm(false);
+    setEmail('');
+  };
+
+  const handleEmailResults = () => {
+    // Here you would integrate with your email service
+    alert(`Results will be sent to ${email}`);
+    setShowEmailForm(false);
+  };
+
+  const shareToLinkedIn = () => {
+    const text = "I just completed Pendo's 2025 software experience maturity assessment. Find out how mature your software stack is:";
+    const url = window.location.href;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const shareToTwitter = () => {
+    const text = "I just completed Pendo's 2025 software experience maturity assessment. Find out how mature your software stack is:";
+    const url = window.location.href;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  };
+
+  const isAssessmentComplete = Object.keys(answers).length === questions.length;
+
+  if (showResults) {
+    const score = getScore();
+    const opportunityAreas = getOpportunityAreas();
+    const maturity = getMaturityLevel();
+    const recommendations = getRecommendedActions();
+
+    // Debug: Let's verify the maturity object has accelerators
+    console.log("Debug - Maturity Level:", maturity.level);
+    console.log("Debug - Accelerators:", maturity.accelerators);
+
+    return (
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-4">Your software experience maturity results</h1>
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gray-900 rounded-lg">
+              <div className="flex items-center gap-2" style={{color: maturity.color}}>
+                {maturity.icon}
+                <span className="text-lg font-semibold">{maturity.level} maturity</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Score Summary */}
+          <div className="grid md:grid-cols-1 gap-8 mb-12">
+            <div className="bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-4">Assessment summary</h2>
+              <div className="text-center">
+                <div className="text-6xl font-bold mb-2" style={{color: maturity.color}}>
+                  {score}/9
+                </div>
+                <p className="text-gray-300">Capability gaps identified</p>
+              </div>
+              <p className="mt-6 text-gray-300 leading-relaxed">
+                {maturity.message}
+              </p>
+            </div>
+          </div>
+
+          {/* Recommended Next Steps */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">Where to focus in vendor evaluation</h2>
+            <div className="grid gap-6">
+              {recommendations.map((rec, index) => (
+                <div key={index} className="bg-gray-900 rounded-xl p-8 border-l-4" style={{borderColor: '#FF4876'}}>
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white">{rec.category}</h3>
+                    <span 
+                      className="px-3 py-1 rounded-full text-sm font-semibold"
+                      style={{
+                        backgroundColor: rec.priority === 'High' ? '#FF4876' : rec.priority === 'Medium' ? '#FFA500' : '#FFD700',
+                        color: 'black'
+                      }}
+                    >
+                      {rec.priority} priority
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-300 mb-4 leading-relaxed">{rec.description}</p>
+                  
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-white">Key capabilities to evaluate:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {rec.tools.map((tool, toolIndex) => (
+                        <span 
+                          key={toolIndex} 
+                          className="px-3 py-1 bg-gray-800 rounded-full text-sm text-gray-300"
+                        >
+                          {tool}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {rec.businessCase1 && (
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <h4 className="font-semibold mb-2 text-white">Business case #1:</h4>
+                        <p className="text-gray-300 text-sm leading-relaxed">{rec.businessCase1}</p>
+                      </div>
+                    )}
+                    {rec.businessCase2 && (
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <h4 className="font-semibold mb-2 text-white">Business case #2:</h4>
+                        <p className="text-gray-300 text-sm leading-relaxed">{rec.businessCase2}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Email Results Form */}
+          {showEmailForm && (
+            <div className="mb-12 bg-gray-900 rounded-xl p-8">
+              <h2 className="text-2xl font-bold mb-6">Get your results via email</h2>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
+                />
+                <button
+                  onClick={handleEmailResults}
+                  disabled={!email}
+                  className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{backgroundColor: '#FF4876', color: 'black'}}
+                >
+                  Send results
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Share Buttons */}
+          <div className="mb-12 text-center">
+            <h2 className="text-2xl font-bold mb-6">Share your results</h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={shareToLinkedIn}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                LinkedIn
+              </button>
+              <button
+                onClick={shareToTwitter}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-400 hover:bg-blue-500 rounded-lg font-semibold transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                Twitter
+              </button>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center bg-gray-900 rounded-xl p-8">
+            <h2 className="text-3xl font-bold mb-4">Ready to take action?</h2>
+            <p className="text-xl text-gray-300 mb-8">
+              Use these insights to inform your SXM vendor evaluation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105"
+                style={{backgroundColor: '#FF4876', color: 'black'}}
+              >
+                Continue to vendor evaluation
+              </button>
+              <button 
+                onClick={downloadResults}
+                className="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition-all flex items-center gap-2 justify-center"
+              >
+                <Mail className="w-5 h-5" />
+                Download my results
+              </button>
+              <button 
+                onClick={resetAssessment}
+                className="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition-all"
+              >
+                Retake assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">Software experience maturity assessment</h1>
+          <p className="text-xl text-gray-300">Understand your software experience today, and where to focus tomorrow</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-12">
+          <div className="flex justify-between text-sm text-gray-400 mb-2">
+            <span>Question {currentQuestion + 1} of {questions.length}</span>
+            <span>{Math.round((Object.keys(answers).length / questions.length) * 100)}%</span>
+          </div>
+          <div className="w-full bg-gray-800 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full transition-all duration-300"
+              style={{
+                backgroundColor: '#FF4876',
+                width: `${(Object.keys(answers).length / questions.length) * 100}%`
+              }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-gray-900 rounded-xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-8 leading-relaxed">
+            {questions[currentQuestion]}
+          </h2>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => handleAnswer('yes')}
+              className="flex-1 group relative overflow-hidden bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-all duration-300 border-2 border-transparent hover:border-green-500"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span className="text-xl font-semibold">Yes</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleAnswer('no')}
+              className="flex-1 group relative overflow-hidden bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-all duration-300 border-2 border-transparent hover:border-pink-500"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <XCircle className="w-6 h-6" style={{color: '#FF4876'}} />
+                <span className="text-xl font-semibold">No</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Get Results Button */}
+        {isAssessmentComplete && (
+          <div className="text-center mb-8">
+            <button
+              onClick={showResultsPage}
+              className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 flex items-center gap-3 mx-auto"
+              style={{backgroundColor: '#FF4876', color: 'black'}}
+            >
+              Get my results
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Previous Answers Preview */}
+        {Object.keys(answers).length > 0 && (
+          <div className="bg-gray-900 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Progress so far</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(answers).map(([index, answer]) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800"
+                >
+                  <span className="text-sm">Q{parseInt(index) + 1}</span>
+                  {answer === 'yes' ? 
+                    <CheckCircle className="w-4 h-4 text-green-500" /> : 
+                    <XCircle className="w-4 h-4" style={{color: '#FF4876'}} />
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SXMAssessment;
